@@ -1,12 +1,57 @@
+import face_recognition
 from flask import Flask, request, jsonify
+import numpy as np
 
 app = Flask(__name__)
+
+# Load known faces once when the app starts
+known_face_encodings = []
+known_face_names = []
+
+def load_known_faces():
+    # Load images from known_faces folder and encode
+    kian_image = face_recognition.load_image_file("known_faces/kian.jpg")
+    kian_encoding = face_recognition.face_encodings(kian_image)[0]
+    known_face_encodings.append(kian_encoding)
+    known_face_names.append("Kian")
+
+    usain_image = face_recognition.load_image_file("known_faces/usain bolt.jpg")
+    usain_encoding = face_recognition.face_encodings(usain_image)[0]
+    known_face_encodings.append(usain_encoding)
+    known_face_names.append("Usain Bolt")
+
+    # Add more known faces here:
+    # e.g.
+    # usain_image = face_recognition.load_image_file("known_faces/usain_bolt.jpg")
+    # usain_encoding = face_recognition.face_encodings(usain_image)[0]
+    # known_face_encodings.append(usain_encoding)
+    # known_face_names.append("Usain Bolt")
+
+load_known_faces()
 
 @app.route('/recognize', methods=['POST'])
 def recognize_face():
     file = request.files.get('image')
-    if file:
-        print("Got image:", file.filename)
-        # Future: Add face recognition here
-        return jsonify({"name": "Kian"})  # Dummy name for now
-    return jsonify({"error": "No image received"}), 400
+    if not file:
+        return jsonify({"error": "No image received"}), 400
+
+    # Read the uploaded image file into a numpy array
+    img = face_recognition.load_image_file(file)
+
+    # Get face encodings in the uploaded image
+    face_encodings = face_recognition.face_encodings(img)
+
+    if len(face_encodings) == 0:
+        return jsonify({"error": "No face found in the image"}), 400
+
+    face_encoding = face_encodings[0]
+
+    # Compare face encoding to known faces
+    matches = face_recognition.compare_faces(known_face_encodings, face_encoding)
+    name = "Unknown"
+
+    if True in matches:
+        first_match_index = matches.index(True)
+        name = known_face_names[first_match_index]
+
+    return jsonify({"name": name})
