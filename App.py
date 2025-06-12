@@ -1,4 +1,4 @@
-import face_recognition
+import face_recognition as fr
 from flask import Flask, request, jsonify
 import numpy as np
 
@@ -19,6 +19,11 @@ def load_known_faces():
     usain_encoding = face_recognition.face_encodings(usain_image)[0]
     known_face_encodings.append(usain_encoding)
     known_face_names.append("Usain Bolt")
+
+    Elon_image = face_recognition.load_image_file("known_faces/ellon musk.jpg")
+    Elon_encoding = face_recognition.face_encodings(Elon_image)[0]
+    known_face_encodings.append(Elon_encoding)
+    known_face_names.append("Elon Musk")
 
     # Add more known faces here:
     # e.g.
